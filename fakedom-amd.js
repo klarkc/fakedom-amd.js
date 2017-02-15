@@ -1,6 +1,7 @@
 var fs    = require('fs');
 var path  = require('path');
 var jsdom = require('jsdom').jsdom;
+var nodeModulePath = require.resolve;
 
 var sinon = global.sinon = require('sinon');
 require("sinon/lib/sinon/util/event");
@@ -117,9 +118,11 @@ function initRequire(window, options, onRequireLoad) {
     // Set require.js options
     window.require = options;
 
+    // Default path of requirejs points to bin/r.js, we must resolve the path
+    // to require.js
     var requirePath = path.resolve(
-        __dirname,
-        './node_modules/requirejs/require.js'
+      path.dirname(nodeModulePath('requirejs')),
+      '../require.js'
     );
 
     fs.exists(requirePath, function(exists) {
