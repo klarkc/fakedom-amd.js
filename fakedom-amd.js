@@ -56,15 +56,23 @@ function fakedom(options, onInit) {
 
         makeSetTimeoutSafe(window);
 
-        window.require(deps, function() {
+        // We need to inject script, because window globals is not node globals
+        // Attach a callback function to window
+        window.fakedomCallback = function() {
             restoreSetTimeout(window);
 
             var args = Array.prototype.slice.call(arguments);
             args.unshift(null);
             onAmdLoad.apply(null, args);
-        }, function(err) {
-            onAmdLoad(err);
-        });
+        };
+        window.fakedomErrorCallback = function(evt) {
+            onAmdLoad(evt.detail || evt); //can be a event or a script error
+        };
+
+        var script = window.document.createElement('script');
+        script.innerHTML = 'window.require(' + JSON.stringify(deps) + ', window.fakedomCallback, window.fakedomErrorCallback);';
+        script.onerror = window.fakedomCallback;
+        window.document.body.appendChild(script);
 
         return this;
     }
